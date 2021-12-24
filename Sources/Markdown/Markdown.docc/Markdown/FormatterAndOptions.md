@@ -9,3 +9,5 @@
 ### Options
 
 - ``MarkupDumpOptions``
+- ``ParseOptions``
+- ``ConvertOptions``
