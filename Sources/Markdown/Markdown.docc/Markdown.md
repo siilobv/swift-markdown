@@ -10,6 +10,12 @@ The markup tree provided by this package is comprised of immutable/persistent, t
 
 ## Topics
 
+### Snippets
+
+A quick overview of examples showing tasks you can achieve with Swift Markdown.
+
+- <doc:Snippets>
+
 ### Getting Started
 
 - <doc:Parsing-Building-and-Modifying-Markup-Trees>
