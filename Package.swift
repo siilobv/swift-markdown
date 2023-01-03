@@ -14,7 +14,7 @@
 import PackageDescription
 import class Foundation.ProcessInfo
 
-let cmarkPackageName = ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil ? "swift-cmark" : "swift-cmark-gfm"
+let cmarkPackageName = ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil ? "swift-cmark" : "cmark"
 
 let package = Package(
     name: "swift-markdown",
@@ -31,7 +31,7 @@ let package = Package(
                 .product(name: "cmark-gfm", package: cmarkPackageName),
                 .product(name: "cmark-gfm-extensions", package: cmarkPackageName),
             ]),
-        .target(
+        .executableTarget(
             name: "markdown-tool",
             dependencies: [
                 "Markdown",
@@ -57,7 +57,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
 } else {
     // Building in the Swift.org CI system, so rely on local versions of dependencies.
     package.dependencies += [
-        .package(path: "../swift-cmark-gfm"),
+        .package(path: "../cmark"),
         .package(path: "../swift-argument-parser"),
     ]
 }

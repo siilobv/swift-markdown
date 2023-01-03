@@ -144,6 +144,33 @@ class MarkupFormatterSingleElementTests: XCTestCase {
         }
     }
 
+    func testPrintOrderedListCustomStart() {
+        let options = MarkupFormatter.Options(orderedListNumerals: .allSame(2))
+        do { // no checkbox
+            let expected = "2. A list item."
+            var renderedList = OrderedList(ListItem(Paragraph(Text("A list item."))))
+            renderedList.startIndex = 2
+            let printed = renderedList.format(options: options)
+            XCTAssertEqual(expected, printed)
+        }
+        do { // unchecked
+            let expected = "2. [ ] A list item."
+            var renderedList = OrderedList(ListItem(checkbox: .unchecked,
+                                                    Paragraph(Text("A list item."))))
+            renderedList.startIndex = 2
+            let printed = renderedList.format(options: options)
+            XCTAssertEqual(expected, printed)
+        }
+        do { // checked
+            let expected = "2. [x] A list item."
+            var renderedList = OrderedList(ListItem(checkbox: .checked,
+                                                    Paragraph(Text("A list item."))))
+            renderedList.startIndex = 2
+            let printed = renderedList.format(options: options)
+            XCTAssertEqual(expected, printed)
+        }
+    }
+
     func testPrintParagraph() {
         let expected = "A paragraph."
         let printed = Paragraph(Text("A paragraph.")).format()
@@ -426,13 +453,13 @@ class MarkupFormatterOptionsTests: XCTestCase {
         3. C
         """
         let allSame = """
-        0. A
-        0. B
-        0. C
+        1. A
+        1. B
+        1. C
         """
         do {
             let document = Document(parsing: incrementing)
-            let printed = document.format(options: .init(orderedListNumerals: .allSame(0)))
+            let printed = document.format(options: .init(orderedListNumerals: .allSame(1)))
             XCTAssertEqual(allSame, printed)
         }
 
@@ -917,7 +944,7 @@ class MarkupFormatterLineSplittingTests: XCTestCase {
 
         let expectedTreeDump = """
         Document
-        └─ OrderedList
+        └─ OrderedList startIndex: 1000
            └─ ListItem
               └─ Paragraph
                  ├─ Text "Really really"
@@ -1265,9 +1292,9 @@ class MarkupFormatterTableTests: XCTestCase {
               │     └─ Link destination: "https://swift.org"
               │        └─ Text "https://swift.org"
               └─ Row
-                 ├─ Cell
+                 ├─ Cell colspan: 2
                  │  └─ InlineHTML <br/>
-                 ├─ Cell
+                 ├─ Cell colspan: 0
                  └─ Cell
         """
         XCTAssertEqual(expectedDump, document.debugDescription())
@@ -1277,7 +1304,58 @@ class MarkupFormatterTableTests: XCTestCase {
         |*A*                       |**B**                 |~C~                |
         |:-------------------------|:--------------------:|------------------:|
         |[Apple](https://apple.com)|![image](image.png "")|<https://swift.org>|
-        |<br/>                     |                      |                   |
+        |<br/>                                           ||                   |
+        """
+
+        XCTAssertEqual(expected, formatted)
+        print(formatted)
+
+        let reparsed = Document(parsing: formatted)
+        print(reparsed.debugDescription())
+        XCTAssertTrue(document.hasSameStructure(as: reparsed))
+    }
+
+    func testRoundTripRowspan() {
+        let source = """
+        | one | two | three |
+        | --- | --- | ----- |
+        | big      || small |
+        | ^        || small |
+        """
+
+        let document = Document(parsing: source)
+
+        let expectedDump = """
+        Document
+        └─ Table alignments: |-|-|-|
+           ├─ Head
+           │  ├─ Cell
+           │  │  └─ Text "one"
+           │  ├─ Cell
+           │  │  └─ Text "two"
+           │  └─ Cell
+           │     └─ Text "three"
+           └─ Body
+              ├─ Row
+              │  ├─ Cell colspan: 2 rowspan: 2
+              │  │  └─ Text "big"
+              │  ├─ Cell colspan: 0
+              │  └─ Cell
+              │     └─ Text "small"
+              └─ Row
+                 ├─ Cell colspan: 2 rowspan: 0
+                 ├─ Cell colspan: 0
+                 └─ Cell
+                    └─ Text "small"
+        """
+        XCTAssertEqual(expectedDump, document.debugDescription())
+
+        let formatted = document.format()
+        let expected = """
+        |one|two|three|
+        |---|---|-----|
+        |big   ||small|
+        |^     ||small|
         """
 
         XCTAssertEqual(expected, formatted)

@@ -189,6 +189,14 @@ struct MarkupTreeDumper: MarkupWalker {
         dump(heading, customDescription: "level: \(heading.level)")
     }
 
+    mutating func visitOrderedList(_ orderedList: OrderedList) {
+        if orderedList.startIndex != 1 {
+            dump(orderedList, customDescription: "startIndex: \(orderedList.startIndex)")
+        } else {
+            defaultVisit(orderedList)
+        }
+    }
+
     mutating func visitCodeBlock(_ codeBlock: CodeBlock) {
         let lines = indentLiteralBlock(codeBlock.code, from: codeBlock, countLines: false)
         dump(codeBlock, customDescription: "language: \(codeBlock.language ?? "none")\n\(lines)")
@@ -257,5 +265,21 @@ struct MarkupTreeDumper: MarkupWalker {
 
     mutating func visitSymbolLink(_ symbolLink: SymbolLink) {
         dump(symbolLink, customDescription: symbolLink.destination.map { "destination: \($0)" })
+    }
+
+    mutating func visitTableCell(_ tableCell: Table.Cell) {
+        var desc = ""
+        if tableCell.colspan != 1 {
+            desc += " colspan: \(tableCell.colspan)"
+        }
+        if tableCell.rowspan != 1 {
+            desc += " rowspan: \(tableCell.rowspan)"
+        }
+        desc = desc.trimmingCharacters(in: .whitespaces)
+        if !desc.isEmpty {
+            dump(tableCell, customDescription: desc)
+        } else {
+            dump(tableCell)
+        }
     }
 }

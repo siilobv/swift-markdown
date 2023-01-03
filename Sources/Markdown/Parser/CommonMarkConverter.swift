@@ -299,7 +299,8 @@ struct MarkupParser {
         case CMARK_BULLET_LIST:
             return MarkupConversion(state: childConversion.state.next(), result: .unorderedList(parsedRange: parsedRange, childConversion.result))
         case CMARK_ORDERED_LIST:
-            return MarkupConversion(state: childConversion.state.next(), result: .orderedList(parsedRange: parsedRange, childConversion.result))
+            let cmarkStart = UInt(cmark_node_get_list_start(state.node))
+            return MarkupConversion(state: childConversion.state.next(), result: .orderedList(parsedRange: parsedRange, childConversion.result, startIndex: cmarkStart))
         default:
             fatalError("cmark reported a list node but said its list type is CMARK_NO_LIST?")
         }
@@ -570,9 +571,11 @@ struct MarkupParser {
         precondition(state.nodeType == .tableCell)
         let parsedRange = state.range(state.node)
         let childConversion = convertChildren(state)
+        let colspan = UInt(cmark_gfm_extensions_get_table_cell_colspan(state.node))
+        let rowspan = UInt(cmark_gfm_extensions_get_table_cell_rowspan(state.node))
         precondition(childConversion.state.node == state.node)
         precondition(childConversion.state.event == CMARK_EVENT_EXIT)
-        return MarkupConversion(state: childConversion.state.next(), result: .tableCell(parsedRange: parsedRange, childConversion.result))
+        return MarkupConversion(state: childConversion.state.next(), result: .tableCell(parsedRange: parsedRange, colspan: colspan, rowspan: rowspan, childConversion.result))
     }
 
     static func parseString(_ string: String, source: URL?, options: ConvertOptions) -> Document {

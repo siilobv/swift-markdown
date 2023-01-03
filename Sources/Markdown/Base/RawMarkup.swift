@@ -24,7 +24,7 @@ enum RawMarkupData: Equatable {
     case thematicBreak
     case htmlBlock(String)
     case listItem(checkbox: Checkbox?)
-    case orderedList
+    case orderedList(startIndex: UInt = 1)
     case unorderedList
     case paragraph
     case blockDirective(name: String, nameLocation: SourceLocation?, arguments: DirectiveArgumentText)
@@ -49,7 +49,18 @@ enum RawMarkupData: Equatable {
     case tableHead
     case tableBody
     case tableRow
-    case tableCell
+    case tableCell(colspan: UInt, rowspan: UInt)
+}
+
+extension RawMarkupData {
+    func isTableCell() -> Bool {
+        switch self {
+        case .tableCell:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 /// The header for the `RawMarkup` managed buffer.
@@ -217,8 +228,8 @@ final class RawMarkup: ManagedBuffer<RawMarkupHeader, RawMarkup> {
         return .create(data: .listItem(checkbox: checkbox), parsedRange: parsedRange, children: children)
     }
 
-    static func orderedList(parsedRange: SourceRange?, _ children: [RawMarkup]) -> RawMarkup {
-        return .create(data: .orderedList, parsedRange: parsedRange, children: children)
+    static func orderedList(parsedRange: SourceRange?, _ children: [RawMarkup], startIndex: UInt = 1) -> RawMarkup {
+        return .create(data: .orderedList(startIndex: startIndex), parsedRange: parsedRange, children: children)
     }
 
     static func unorderedList(parsedRange: SourceRange?, _ children: [RawMarkup]) -> RawMarkup {
@@ -297,12 +308,12 @@ final class RawMarkup: ManagedBuffer<RawMarkupHeader, RawMarkup> {
     }
 
     static func tableRow(parsedRange: SourceRange?, _ columns: [RawMarkup]) -> RawMarkup {
-        precondition(columns.allSatisfy { $0.header.data == .tableCell })
+        precondition(columns.allSatisfy { $0.header.data.isTableCell() })
         return .create(data: .tableRow, parsedRange: parsedRange, children: columns)
     }
 
     static func tableHead(parsedRange: SourceRange?, columns: [RawMarkup]) -> RawMarkup {
-        precondition(columns.allSatisfy { $0.header.data == .tableCell })
+        precondition(columns.allSatisfy { $0.header.data.isTableCell() })
         return .create(data: .tableHead, parsedRange: parsedRange, children: columns)
     }
 
@@ -311,8 +322,8 @@ final class RawMarkup: ManagedBuffer<RawMarkupHeader, RawMarkup> {
         return .create(data: .tableBody, parsedRange: parsedRange, children: rows)
     }
 
-    static func tableCell(parsedRange: SourceRange?, _ children: [RawMarkup]) -> RawMarkup {
-        return .create(data: .tableCell, parsedRange: parsedRange, children: children)
+    static func tableCell(parsedRange: SourceRange?, colspan: UInt, rowspan: UInt, _ children: [RawMarkup]) -> RawMarkup {
+        return .create(data: .tableCell(colspan: colspan, rowspan: rowspan), parsedRange: parsedRange, children: children)
     }
 }
 

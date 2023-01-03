@@ -23,9 +23,13 @@ public struct ConvertOptions {
     }
 
     public init(fromParseOptions options: ParseOptions) {
+        var commonmarkOptions = ConvertOptions.defaultCommonmarkOptions
+        if options.contains(.disableSmartOpts) {
+            commonmarkOptions.remove(.smart)
+        }
         self.init(
             parseOptions: options,
-            commonmarkOptions: ConvertOptions.defaultCommonmarkOptions,
+            commonmarkOptions: commonmarkOptions,
             extensions: ConvertOptions.defaultCommonmarkExtensions
         )
     }
@@ -35,7 +39,10 @@ public struct ConvertOptions {
     }
 
     public static let defaultParseOptions: ParseOptions = []
-    public static let defaultCommonmarkOptions: CommonmarkOptions = [.smart]
+    public static let defaultCommonmarkOptions: CommonmarkOptions = [
+        .smart,
+        .tableSpans,
+    ]
     public static let defaultCommonmarkExtensions: [String] = [
         "table",
         "strikethrough",
@@ -112,4 +119,10 @@ public struct CommonmarkOptions: OptionSet {
     /// Using this option also enables the `CMARK_OPT_INLINE_ONLY` option.
     // FIXME: the original `CMARK_OPT_PRESERVE_WHITESPACE` isn't available to the swift compiler?
     public static let preserveWhitespace = CommonmarkOptions(rawValue: (1 << 19) | CMARK_OPT_INLINE_ONLY)
+
+    /// Enable the row- and column-span syntax in the tables extension.
+    public static let tableSpans = CommonmarkOptions(rawValue: CMARK_OPT_TABLE_SPANS)
+
+    /// Use a "ditto mark" (`"`) instead of a caret (`^`) to indicate row-spans in the tables extension.
+    public static let tableRowspanDitto = CommonmarkOptions(rawValue: CMARK_OPT_TABLE_ROWSPAN_DITTO)
 }
