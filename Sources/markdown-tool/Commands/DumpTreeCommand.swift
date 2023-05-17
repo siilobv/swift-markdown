@@ -34,8 +34,17 @@ extension MarkdownCommand {
         @Flag<Bool>(help: "Don't enable the default Commonmark extensions (\(ConvertOptions.defaultCommonmarkExtensions.joined(separator: ", ")))")
         var noDefaultExtensions: Bool = false
 
+        @Flag<Bool>(inversion: .prefixedNo, exclusivity: .chooseLast, help: "Parse a minimal set of Doxygen commands (requires --parse-block-directives)")
+        var experimentalParseDoxygenCommands: Bool = false
+
         func run() throws {
-            let parseOptions: ParseOptions = parseBlockDirectives ? [.parseBlockDirectives] : []
+            var parseOptions = ParseOptions()
+            if parseBlockDirectives {
+                parseOptions.insert(.parseBlockDirectives)
+            }
+            if experimentalParseDoxygenCommands {
+                parseOptions.insert(.parseMinimalDoxygen)
+            }
             var commonmarkExts = noDefaultExtensions ? [] : ConvertOptions.defaultCommonmarkExtensions
             commonmarkExts.append(contentsOf: `extension`)
             let convertOptions = ConvertOptions.init(
