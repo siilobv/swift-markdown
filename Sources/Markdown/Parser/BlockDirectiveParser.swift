@@ -1155,7 +1155,7 @@ struct BlockDirectiveParser {
         // Phase 1: Categorize the lines into a hierarchy of block containers by parsing the prefix
         // of the line, opening and closing block directives appropriately, and folding elements
         // into a root document.
-        let rootContainer = ParseContainer(parsingHierarchyFrom: trimmedLines, options: options)
+        let rootContainer = ParseContainer(parsingHierarchyFrom: trimmedLines, options: options.parseOptions)
 
         // Phase 2: Convert the hierarchy of block containers into a real ``Document``.
         // This is where the CommonMark parser is called upon to parse runs of lines of content,
