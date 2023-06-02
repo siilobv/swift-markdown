@@ -408,29 +408,19 @@ struct TrimmedLine {
         while let c = prefix.next() {
             if isEscaped {
                 isEscaped = false
-                takeCount += 1
-                continue
             }
-            if allowEscape,
+            else if allowEscape,
                c == "\\" {
                 isEscaped = true
-                takeCount += 1
-                continue
             }
-            if isQuoted {
-                if c == "\"" {
-                    isQuoted = false
-                }
-                takeCount += 1
-                continue
+            else if isQuoted {
+                isQuoted = (c != "\"")
             }
-            if allowQuote,
+            else if allowQuote,
                c == "\"" {
                 isQuoted = true
-                takeCount += 1
-                continue
             }
-            if case .stop = stop(c) {
+            else if case .stop = stop(c) {
                 break
             }
             takeCount += 1
